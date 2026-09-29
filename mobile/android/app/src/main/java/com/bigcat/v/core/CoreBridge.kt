@@ -8,10 +8,10 @@ import java.lang.reflect.InvocationTargetException
  * 约定（由 core/mobile/ 的 `gomobile bind -target=android` 产出）：
  *   - 产物：app/libs/bigcatv.aar
  *   - Java 包名：mobile，类名：Mobile
- *   - 静态方法：
- *       Mobile.Start(String listenAddr, String workDir) // 拉起核心并监听，如 "127.0.0.1:17890"
- *       Mobile.Stop()                                  // 停止核心
- *       Mobile.Version() : String                      // 版本号
+ *   - 静态方法（gobind 首字母小写）：
+ *       Mobile.start(String listenAddr, String workDir) // 拉起核心并监听，如 "127.0.0.1:17890"
+ *       Mobile.stop()                                  // 停止核心
+ *       Mobile.version() : String                      // 版本号
  *
  * 为“aar 未就位时仍可编译”采用反射调用：aar 放入 app/libs 后无需改任何
  * Kotlin 代码，重新构建即生效。aar 缺失时抛 CoreMissingException（UI 会提示去看 README）。
@@ -45,17 +45,17 @@ object CoreBridge {
 
     /** 拉起 Go 核心。listenAddr 如 "127.0.0.1:17890"，workDir 用 Context.filesDir。 */
     fun start(listenAddr: String, workDir: String) {
-        invoke("Start", listenAddr, workDir)
+        invoke("start", listenAddr, workDir)
     }
 
     /** 停止 Go 核心。 */
     fun stop() {
-        invoke("Stop")
+        invoke("stop")
     }
 
     /** 核心版本号；aar 缺失时返回 "unknown"。 */
     fun version(): String = try {
-        invoke("Version") as? String ?: "unknown"
+        invoke("version") as? String ?: "unknown"
     } catch (_: Exception) {
         "unknown"
     }
