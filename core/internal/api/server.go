@@ -8,6 +8,7 @@ package api
 import (
 	"encoding/json"
 	"fmt"
+	"io/fs"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -92,11 +93,12 @@ type Server struct {
 	geo     *geo.Updater
 	mux     *http.ServeMux
 	workDir string
+	web     fs.FS // 内嵌 Web UI（nil=未打包，仅 API）
 }
 
 // NewServer 创建 API 服务器。cores 为可用内核映射（缺失二进制的不放入）。
 func NewServer(store *Store, cores map[string]engine.Core, workDir string, routing *routing.Store, geo *geo.Updater) *Server {
-	s := &Server{store: store, cores: cores, mux: http.NewServeMux(), workDir: workDir, routing: routing, geo: geo}
+	s := &Server{store: store, cores: cores, mux: http.NewServeMux(), workDir: workDir, routing: routing, geo: geo, web: webFS()}
 	s.routes()
 	return s
 }
@@ -154,6 +156,10 @@ func (s *Server) routes() {
 	s.mux.HandleFunc("GET /api/v1/routing/geo", s.handleGeoStatus)
 	s.mux.HandleFunc("POST /api/v1/routing/geo/update", s.handleGeoUpdate)
 	s.mux.HandleFunc("PUT /api/v1/routing/geo", s.handleGeoSettings)
+	// 内嵌 Web UI（/ 兜底路由，API 优先匹配）
+	if s.web != nil {
+		s.mux.HandleFunc("/", s.handleWeb)
+	}
 }
 
 func (s *Server) handleStatus(w http.ResponseWriter, r *http.Request) {

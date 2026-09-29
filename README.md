@@ -48,3 +48,5 @@ go build ./...
   - [ ] 真机验证（.aar/.xcframework 打包与流量测试，需 NDK/Xcode）
   - [ ] App 侧样例（VpnService / NEPacketTunnelProvider）与 TUN fd 注入
 - [x] v0.4 规则集：GeoIP / GeoSite 定时更新、自定义分流（routing.json 规则 CRUD+排序+默认动作；geo 后台定时下载 .srs/.dat，API 全套；双内核生成：sing-box rule_set+xray field rules；桌面端分流 Tab）
+- [x] v0.5 安装包：bigcatvd 内嵌 Web UI（单二进制即完整应用，浏览器打开 http://127.0.0.1:17890）；五平台交叉编译（windows-amd64 / darwin-amd64+arm64 / linux-amd64+arm64），Release 附件下载；`scripts/fetch-kernels.sh` 一键下载官方 sing-box/xray 内核到 `bin/`；`docs/INSTALL.md` 安装说明
+- [ ] v0.6 规划：桌面原生安装包（Tauri .msi/.dmg）、Android APK、iOS 应用（需对应平台开发机打包，沙箱 Linux 无法产出）
