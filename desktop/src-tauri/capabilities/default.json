@@ -1,0 +1,1 @@
+{"$schema":"../gen/schemas/desktop-schema.json","description":"BigCat V 默认权限：窗口 + sidecar 进程管理","identifier":"default","permissions":["core:default","shell:allow-execute","shell:allow-spawn","shell:allow-kill"],"windows":["main"]}

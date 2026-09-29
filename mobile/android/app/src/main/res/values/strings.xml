@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">BigCat V</string>
+    <string name="vpn_channel_name">BigCat V VPN</string>
+    <string name="vpn_channel_desc">代理隧道运行状态通知</string>
+</resources>

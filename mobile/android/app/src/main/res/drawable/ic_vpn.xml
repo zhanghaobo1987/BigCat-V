@@ -1,0 +1,13 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <!-- 前台服务通知小图标：简化的隧道/盾牌形 -->
+    <path
+        android:fillColor="#FF6D00"
+        android:pathData="M12,2L4,5v6c0,5 3.4,9.4 8,11 4.6,-1.6 8,-6 8,-11V5L12,2z" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M13.5,8.5h-3v3h-3v3h3v3h3v-3h3v-3h-3z" />
+</vector>

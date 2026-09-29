@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BigCat V</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="brand"><span class="logo">🐈</span> BigCat <b>V</b> <span class="ver">v0.2</span></div>
+  <div class="top-status">
+    <span id="statusPill" class="pill off">未连接</span>
+    <span id="kernelBadge" class="badge hidden"></span>
+    <span id="activeNodeLabel" class="active-node hidden"></span>
+  </div>
+  <div class="top-actions">
+    <button id="btnStart" class="primary">启动</button>
+    <button id="btnStop" class="ghost">停止</button>
+  </div>
+</header>
+
+<div id="connWarn" class="warn hidden">
+  未连接到 bigcatvd（<span id="connWarnAddr"></span>）。请先启动核心：
+  <code>./bigcatvd</code>，或在设置里修改 API 地址。
+</div>
+
+<nav class="tabs">
+  <button data-tab="nodes" class="active">节点</button>
+  <button data-tab="subs">订阅</button>
+  <button data-tab="routing">分流</button>
+  <button data-tab="logs">日志</button>
+  <button data-tab="settings">设置</button>
+</nav>
+
+<main>
+  <!-- 节点 -->
+  <section id="tab-nodes" class="tab active">
+    <div class="toolbar">
+      <input id="nodeSearch" type="search" placeholder="搜索名称 / 服务器 / 分组 / 协议">
+      <select id="protoFilter"><option value="">全部协议</option></select>
+      <div class="spacer"></div>
+      <button id="btnTestAll" class="ghost">测速全部</button>
+      <button id="btnAddNode" class="primary">+ 添加节点</button>
+    </div>
+    <div id="addNodeForm" class="card hidden">
+      <textarea id="addNodeLinks" rows="4" placeholder="粘贴分享链接，每行一条（ss:// vmess:// vless:// trojan:// hy2:// tuic:// …）"></textarea>
+      <div class="row-end">
+        <button id="btnDoAddNode" class="primary">导入</button>
+        <button id="btnCancelAddNode" class="ghost">取消</button>
+      </div>
+      <div id="addNodeResult" class="muted"></div>
+    </div>
+    <div id="nodeCount" class="muted"></div>
+    <table class="nodes">
+      <thead><tr>
+        <th>名称</th><th>协议</th><th>服务器</th><th>延迟</th><th>xray</th><th class="ops">操作</th>
+      </tr></thead>
+      <tbody id="nodeRows"></tbody>
+    </table>
+  </section>
+
+  <!-- 订阅 -->
+  <section id="tab-subs" class="tab">
+    <div class="card">
+      <h3>添加订阅</h3>
+      <div class="form-row">
+        <input id="subName" placeholder="名称（可选）">
+        <input id="subUrl" placeholder="订阅 URL（https://…）" class="grow">
+        <button id="btnAddSub" class="primary">添加并抓取</button>
+      </div>
+      <div id="addSubResult" class="muted"></div>
+    </div>
+    <div id="subList"></div>
+  </section>
+
+  <!-- 分流 -->
+  <section id="tab-routing" class="tab">
+    <div class="card">
+      <div class="toolbar">
+        <h3 style="margin:0">分流规则</h3>
+        <div class="spacer"></div>
+        <span class="muted">未命中默认动作</span>
+        <select id="defaultAction">
+          <option value="proxy">走代理</option>
+          <option value="direct">直连</option>
+          <option value="block">拦截</option>
+        </select>
+        <button id="btnAddRule" class="primary">+ 新增规则</button>
+      </div>
+      <div class="muted" style="margin-bottom:10px">按顺序匹配，首条命中生效；同一规则内多个条件为"或"关系。</div>
+      <table class="nodes">
+        <thead><tr>
+          <th>规则</th><th>动作</th><th>条件</th><th>启用</th><th class="ops">排序</th><th class="ops">操作</th>
+        </tr></thead>
+        <tbody id="ruleRows"></tbody>
+      </table>
+    </div>
+    <div class="card">
+      <h3>GeoIP / GeoSite</h3>
+      <table class="nodes">
+        <thead><tr>
+          <th>文件</th><th>大小</th><th>更新时间</th><th>状态</th>
+        </tr></thead>
+        <tbody id="geoRows"></tbody>
+      </table>
+      <div class="form-row" style="margin-top:12px">
+        <label class="check"><input type="checkbox" id="geoAutoUpdate"> 自动更新</label>
+        <label>间隔（小时）</label>
+        <input id="geoIntervalHours" type="number" min="1" max="720" style="width:90px">
+        <div class="spacer"></div>
+        <button id="btnGeoUpdate" class="ghost">立即更新</button>
+      </div>
+      <div class="muted">sing-box 使用 .srs 文件，xray 使用 geoip.dat / geosite.dat；缺失时相关 geo 条件会被丢弃。</div>
+    </div>
+  </section>
+
+  <!-- 日志 -->
+  <section id="tab-logs" class="tab">
+    <div class="toolbar">
+      <label class="check"><input type="checkbox" id="logAutoScroll" checked> 自动滚动</label>
+      <div class="spacer"></div>
+      <button id="btnClearLog" class="ghost">清空</button>
+    </div>
+    <pre id="logView" class="logview"></pre>
+  </section>
+
+  <!-- 设置 -->
+  <section id="tab-settings" class="tab">
+    <div class="card">
+      <h3>核心连接</h3>
+      <div class="form-row">
+        <label>API 地址</label>
+        <input id="setApiBase" class="grow" placeholder="http://127.0.0.1:17890">
+      </div>
+      <h3>启动选项</h3>
+      <div class="form-row">
+        <label>内核</label>
+        <select id="setKernel"></select>
+        <span id="kernelAvail" class="muted"></span>
+      </div>
+      <div class="form-row">
+        <label>本地端口</label>
+        <input id="setMixedPort" type="number" value="7890" min="1024" max="65535">
+        <span class="muted">mixed(socks+http) 入口；http 入口为 +1</span>
+      </div>
+      <div class="form-row">
+        <label class="check"><input type="checkbox" id="setTun"> TUN 模式</label>
+        <span class="muted">需要管理员/root 权限</span>
+      </div>
+      <div class="row-end">
+        <button id="btnSaveSettings" class="primary">保存设置</button>
+        <button id="btnViewConfig" class="ghost">查看当前内核配置</button>
+      </div>
+    </div>
+    <div class="card">
+      <h3>关于</h3>
+      <div id="aboutBox" class="muted"></div>
+    </div>
+  </section>
+</main>
+
+<div id="modal" class="modal hidden">
+  <div class="modal-box">
+    <div class="modal-head"><b>当前内核配置</b><button id="btnCloseModal" class="ghost">关闭</button></div>
+    <pre id="configView" class="logview"></pre>
+  </div>
+</div>
+
+<!-- 分流规则编辑弹窗 -->
+<div id="ruleModal" class="modal hidden">
+  <div class="modal-box">
+    <div class="modal-head"><b id="ruleModalTitle">新增规则</b><button id="btnCloseRuleModal" class="ghost">关闭</button></div>
+    <div class="form-row">
+      <label>名称</label>
+      <input id="ruleName" class="grow" placeholder="如：国内直连">
+    </div>
+    <div class="form-row">
+      <label>动作</label>
+      <select id="ruleAction">
+        <option value="proxy">走代理</option>
+        <option value="direct">直连</option>
+        <option value="block">拦截</option>
+      </select>
+      <label class="check"><input type="checkbox" id="ruleEnabled" checked> 启用</label>
+    </div>
+    <div class="form-row">
+      <label>域名后缀</label>
+      <textarea id="ruleDomainSuffix" rows="2" class="grow" placeholder="每行一条，如 example.com"></textarea>
+    </div>
+    <div class="form-row">
+      <label>域名关键字</label>
+      <textarea id="ruleDomainKeyword" rows="2" class="grow" placeholder="每行一条"></textarea>
+    </div>
+    <div class="form-row">
+      <label>域名正则</label>
+      <textarea id="ruleDomainRegex" rows="2" class="grow" placeholder="每行一条"></textarea>
+    </div>
+    <div class="form-row">
+      <label>IP CIDR</label>
+      <textarea id="ruleIpCidr" rows="2" class="grow" placeholder="每行一条，如 192.168.0.0/16"></textarea>
+    </div>
+    <div class="form-row">
+      <label>GeoIP</label>
+      <input id="ruleGeoip" class="grow" placeholder="逗号分隔，如 cn">
+    </div>
+    <div class="form-row">
+      <label>GeoSite</label>
+      <input id="ruleGeosite" class="grow" placeholder="逗号分隔，如 cn,category-ads-all">
+    </div>
+    <div class="form-row">
+      <label>端口</label>
+      <input id="rulePort" class="grow" placeholder="逗号分隔，如 80,443">
+    </div>
+    <div class="form-row">
+      <label>进程名</label>
+      <input id="ruleProcess" class="grow" placeholder="逗号分隔，仅 sing-box 生效">
+    </div>
+    <div class="row-end">
+      <button id="btnSaveRule" class="primary">保存</button>
+      <button id="btnCancelRule" class="ghost">取消</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast" class="toast hidden"></div>
+<script src="app.js"></script>
+</body>
+</html>
